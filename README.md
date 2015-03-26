@@ -1,2 +1,2 @@
 # github-info
-Script to use Github API
+Scripts to use Github API
