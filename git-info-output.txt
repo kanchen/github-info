@@ -1,0 +1,252 @@
+a: ******************************************
+Repository name: Hystrix
+Repository full name: Netflix/Hystrix
+******************************************
+
+b: ******************************************
+Date of first commit: 2012-11-19T20:14:46Z
+Date of most recent commit: 2015-03-26T00:10:22Z
+
+c: ******************************************
+Branches:
+******************************************
+1.3.x
+contributing
+gh-pages
+master
+
+d: ******************************************
+There are 30 issue(s):
+******************************************
+open: I've encountered this issue, but don't know enough about Gradle to help diagnose the issue. In versions of Hystrix prior to 1.4, the Maven dependency on io.reactivex:rxjava had scope=compile ([see pom.xml in Maven Central](https://repo1.maven.org/maven2/com/netflix/hystrix/hystrix-core/1.3.20/hystrix-core-1.3.20.pom)). With version 1.4 and later, the Maven dependency scope is set to "runtime" ([pom.xml in Maven Central](https://repo1.maven.org/maven2/com/netflix/hystrix/hystrix-core/1.4.0/hystrix-core-1.4.0.pom)). This causes Maven-based java compilation failures of projects that depend on Hystrix 1.4 or greater. In my case, the compilation error message is 'cannot access rx.Observable  class file for rx.Observable not found'.
+
+It doesn't appear that anything has changed in the hystrix-core/build.gradle file -- the dependency looks right ("compile 'io.reactivex:rxjava:1.0.7'"). But something appears to have changed in how Gradle translates that into the maven pom.xml that's published to Maven Central.
+
+There is a work-around for users running into this issue -- one can simply add a compile-time dependency on rxjava to their own project. That makes using Hystrix a bit more complicated and isn't standard handling for library dependencies.
+open: Using `@HystrixCommand` with a normal `Observable` fails with the exception.
+
+```
+java.lang.RuntimeException: return type of 'feed' method should be com.netflix.hystrix.contrib.javanica.command.ObservableResult.
+	at com.netflix.hystrix.contrib.javanica.command.closure.AbstractClosureFactory.createClosure(AbstractClosureFactory.java:59)
+	at com.netflix.hystrix.contrib.javanica.command.closure.AbstractClosureFactory.createClosure(AbstractClosureFactory.java:41)
+	at com.netflix.hystrix.contrib.javanica.command.MethodExecutionAction.executeWithArgs(MethodExecutionAction.java:79)
+	at com.netflix.hystrix.contrib.javanica.command.MethodExecutionAction.execute(MethodExecutionAction.java:66)
+	at com.netflix.hystrix.contrib.javanica.command.GenericCommand$1.execute(GenericCommand.java:45)
+	at com.netflix.hystrix.contrib.javanica.command.AbstractHystrixCommand.process(AbstractHystrixCommand.java:161)
+	at com.netflix.hystrix.contrib.javanica.command.GenericCommand.run(GenericCommand.java:42)
+	at com.netflix.hystrix.HystrixCommand$1.call(HystrixCommand.java:294)
+	at com.netflix.hystrix.HystrixCommand$1.call(HystrixCommand.java:289)
+	at rx.Observable$2.call(Observable.java:173)
+	at rx.Observable$2.call(Observable.java:166)
+	at rx.Observable$2.call(Observable.java:173)
+	at rx.Observable$2.call(Observable.java:166)
+	at rx.Observable$2.call(Observable.java:173)
+	at rx.Observable$2.call(Observable.java:166)
+	at rx.Observable.unsafeSubscribe(Observable.java:8591)
+	at com.netflix.hystrix.AbstractCommand$5.call(AbstractCommand.java:514)
+	at com.netflix.hystrix.AbstractCommand$5.call(AbstractCommand.java:497)
+	at rx.Observable.unsafeSubscribe(Observable.java:8591)
+	at rx.internal.operators.OperatorSubscribeOn$1$1.call(OperatorSubscribeOn.java:62)
+	at com.netflix.hystrix.strategy.concurrency.HystrixContexSchedulerAction$1.call(HystrixContexSchedulerAction.java:56)
+	at com.netflix.hystrix.strategy.concurrency.HystrixContexSchedulerAction$1.call(HystrixContexSchedulerAction.java:47)
+	at com.netflix.hystrix.strategy.concurrency.HystrixContexSchedulerAction.call(HystrixContexSchedulerAction.java:69)
+	at rx.internal.schedulers.ScheduledAction.run(ScheduledAction.java:43)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+	at java.lang.Thread.run(Thread.java:745)
+```
+open: 
+open: Hi, 
+
+I've upgraded hystrix to version 1.3.20, turbine-web to 1.0.0 and my dashboard is very wrong now (it used to work like a charm when I was using hystrix 1.3.19 and turbine-web-0.5.0-SNAPSHOT): 
+
+- many circuits are missing, despite the fact the stream send the right information. Only 2 are on the board and I expect to have 6 of them
+- thread pool size is totally wrong: numbers are always growing, not showing reality:
+
+![dashboard](https://cloud.githubusercontent.com/assets/31649/6488455/ff019538-c297-11e4-819c-67ce813634d9.png)
+
+for instance, in reality, the pool PublishToBusCommand is around 400/s on 3 servers.
+
+
+For circuits, data is arriving from the stream (like this) but not showed  on the dashboard. Here is what I get when I curl one of my servers:
+
+data: {"type":"HystrixCommand","name":"GetResponseCommand","group":"GetResponseCommand","currentTime":1425487780484,"isCircuitBreakerOpen":false,"errorPercentage":0,"errorCount":0,"requestCount":134,"rollingCountCollapsedRequests":0,"rollingCountExceptionsThrown":5,"rollingCountFailure":0,"rollingCountFallbackFailure":0,"rollingCountFallbackRejection":0,"rollingCountFallbackSuccess":0,"rollingCountResponsesFromCache":0,"rollingCountSemaphoreRejected":0,"rollingCountShortCircuited":0,"rollingCountSuccess":141,"rollingCountThreadPoolRejected":0,"rollingCountTimeout":0,"currentConcurrentExecutionCount":0,"latencyExecute_mean":23,"latencyExecute":{"0":0,"25":14,"50":17,"75":24,"90":40,"95":63,"99":172,"99.5":206,"100":246},"latencyTotal_mean":26,"latencyTotal" {"0":0,"25":14,"50":17,"75":24,"90":43,"95":68,"99":300,"99.5":301,"100":527},"propertyValue_circuitBreakerRequestVolumeThreshold":20,"propertyValue_circuitBreakerSleepWindowInMilliseconds":5000,"propertyValue_circuitBreakerErrorThresholdPercentage":50,"propertyValue_circuitBreakerForceOpen":false,"propertyValue_circuitBreakerForceClosed":false,"propertyValue_circuitBreakerEnabled":true,"propertyValue_executionIsolationStrategy":"THREAD","propertyValue_executionIsolationThreadTimeoutInMilliseconds":300,"propertyValue_executionIsolationThreadInterruptOnTimeout":true,"propertyValue_executionIsolationThreadPoolKeyOverride":null,"propertyValue_executionIsolationSemaphoreMaxConcurrentRequests":10,"propertyValue_fallbackIsolationSemaphoreMaxConcurrentRequests":10,"propertyValue_metricsRollingStatisticalWindowInMilliseconds":10000,"propertyValue_requestCacheEnabled":true,"propertyValue_requestLogEnabled":true,"reportingHosts":1}
+
+We see I receive data for the GetResponseCommand circuit, belonging to the GetResponseCommand group. We don't see the circuit on the dashboard, but we see the thread pool (with very wrong data)
+
+**What's wrong with my update ?**
+
+ps: I took a screenshot of my dashboard a few weeks ago, it looked like this (traffic data is higher now):
+![hystrix](https://cloud.githubusercontent.com/assets/31649/6488694/73b4280e-c299-11e4-9a97-2c9d50444640.png)
+open: Currently, the HystrixThreadPool object can represent a grouping of commands, even if they are all semaphore-only.  In this case, there is no actual thread pool.  This should not be included in the JSON output (and possibly the object model)
+open: Seen in #721, #718, #723 
+open: Any plans? Its usage pattern prompts for Java 7 try-with-resources.
+open: I've received a report that a system stayed on hystrix-core 1.3.18 and upgrade hystrix-metrics-event-stream to 1.4.0.  When that happened, the metrics stream produced no data.  Ideally, this module would be more backwards-compatible.
+open: Does Hystrix 1.4.x still support a java 6 runtime environment?
+open: Hi,
+
+I'm using Hystrix in several projects in my organization (pretty nice idea and framework, thank you and congratulations by the way) but when I started to test some behaviors I felt quite surprised by the way it handles java.lang.Error classes. In summary, I thought that it should only wrap or/and re-throw to fallback method Exceptions. Is it this way for propose? Isnt it a dangerous default approach? Do you have recommendations about this case? I will give as much as details I found so I could make clear what I think, but might be very verbose.
+
+So, in the fallback, I notice that point when I saw that [/HystrixCommand.html#getFailedExecutionException()](https://netflix.github.io/Hystrix/javadoc/com/netflix/hystrix/HystrixCommand.html#getFailedExecutionException()) returned a java.lang.Throwable. So I tried to investigate more and I create a [simple project](https://github.com/luan-cestari/netflix-hystrix-fallback-with-error) with some tests to check the behavior when the [run() method throw an Error](https://github.com/luan-cestari/netflix-hystrix-fallback-with-error/blob/master/src/test/java/demo/HystrixCommandWithErrorTest.java#L60) and as I mentioned Hystrix doesn't consider a big problem and the test runs fine ([output from the tests](https://gist.github.com/luan-cestari/98aaf35779bc2b948ae8) ).
+
+About the java.lang.error, as [Java lang spec says in its documentation](http://docs.oracle.com/javase/specs/jls/se8/html/jls-11.html), the Error classes indicate serious problems and we should not catch it (like, it can be an OoME or ThreadDeath or others)
+
+I also tried to see any related issue and the most similar one was [this one](https://github.com/Netflix/Hystrix/issues/332) (but it isn't the same thing as this issue) but lead me a good diagram about how Hystrix work about Exceptions/Errors. So I head to the documentation to find all the details, so I read about [ErrorPropagation](https://github.com/Netflix/Hystrix/wiki/How-To-Use#ErrorPropagation)  with [Fallback mechanism](https://github.com/Netflix/Hystrix/wiki/How-To-Use#Fallback) ( also the [patterns](https://github.com/Netflix/Hystrix/wiki/How-To-Use#Common-Patterns) that you guys recommend, and my case is the [cache via network case](https://github.com/Netflix/Hystrix/wiki/How-To-Use#fallback-cache-via-network) ). I saw a little bit about the source code and I think the point that needs to change would be [this one](https://github.com/Netflix/Hystrix/blob/master/hystrix-core/src/main/java/com/netflix/hystrix/AbstractCommand.java#L1897) .
+
+Thank you in advance.
+
+Note maybe the picture from [this comment](https://github.com/Netflix/Hystrix/issues/332#issuecomment-61406801) should be available in the wiki by the way
+open: The work in #678 appears to be incomplete.  In production, I've seen a command where this metric drops below 0.
+open: 
+Hi,
+
+This is a question.
+As I understand, Server Sent Event API is not supported by Internet Explorer even as of IE11.  That means the Hysterix dashboards will not work on IE unless we put a work around (say something based on Websockets) in place - can you please confirm the same?
+
+Thanks,
+Santosh
+open: The wiki page https://github.com/Netflix/Hystrix/wiki/Configuration#execution.isolation.thread.timeoutInMilliseconds should be updated with the information about 1.4.x (https://github.com/Netflix/Hystrix/blob/master/CHANGELOG.md) (in summary, timeout now applies for semaphores as well). I would also recommend to rename that property (as it mislead to think it only applies to thread isolation as it used to be)
+closed: Reported in https://twitter.com/pdavidso/status/578698214011838464.
+
+closed: Addresses #715 
+closed: Fixes #75 
+closed: In https://github.com/Netflix/Hystrix/commit/706a0f267ed65a215de1d813598c6c72b00f76eb, the removal of checking of the request log is enabled before the request log initialization has made it impossible to override the concurrency strategy without wrapping all creation/execution of hystrix commands in hystrix context initializations.
+
+This change adds an opt-in interface to use the default request log behavior, instead of forcing the implementor of a concurrency strategy to also change the request log behavior. The advantage of a separate interface is that this is class-file backwards compatible - already compiled concurrency strategies will still work with this commit and will retain the current behavior.
+
+@mattrjacobs 
+closed: 
+closed: The HystrixCommandAspect fails with NPE if the method annotated with @HystrixCommand is implemented in a superclass. Since the Class#getDeclaredMethod can't see inherited methods but in spite of Class#getMethod can see private ones, I performed a recursive search up by class hierarchy.
+closed: > **Use Archaius for Hystrix plugin setup**
+>
+> Currently, Hystrix lets you define custom strategies in two ways:
+> 1) with System properties
+> 2) with bootstrapping via HystrixPlugins.getInstance().registerXXX
+> If neither is specified, the default strategy is used.
+> 
+> This change replaces hardwired System.getProperty calls with lookup
+> via Archaius. So one can override the plugin strategies used with
+> any configuration provider Archaius is configured with.
+> 
+> Most importantly, it has the effect of checking any file called
+> "config.properties" on the classpath as well as using system properties.
+> This lets you configure plugin strategies without having to write
+> Java code for it, or having to run the application with additional
+> system properties.
+> 
+> Fixes #92
+
+According to https://github.com/Netflix/Hystrix/issues/92#issuecomment-76773888, Hystrix is supposed to load its configuration from Archaius, but apparently that is not the case with HystrixPlugins. This PR fixes that.
+closed: This fixes #709, correcting the mistake introduced by https://github.com/Netflix/Hystrix/commit/dc3bc3cac5ff349cb7cdca93c3bbf0b875f473f7, where "isNaN" is incorrectly cased as "isNan", causing the JavaScript error "isNan is not defined".
+closed: This commit causes a JavaScript error, because of casing on "isNaN".
+
+https://github.com/Netflix/Hystrix/commit/dc3bc3cac5ff349cb7cdca93c3bbf0b875f473f7
+closed: In https://github.com/Netflix/Hystrix/commit/706a0f267ed65a215de1d813598c6c72b00f76eb,
+the guard to initialize the request log based on the property was removed. This
+causes a dependency on hystrix context initialization for all custom concurrency
+strategies.
+
+Here we add that back in, along with a test to ensure that a custom strategy could
+still run without an initialized context.
+
+This PR supercedes https://github.com/Netflix/Hystrix/pull/718/
+
+/cc @mattrjacobs 
+closed: 
+closed: Fixing Javadoc per #699 
+closed: https://github.com/Netflix/Hystrix/wiki/How-To-Use#hystrixobservablecommand-equivalent shows invalid signature for construct():
+
+```java
+    @Override
+    protected String construct() {
+        return Observable.create(new Observable.OnSubscribe<String>() {
+            @Override
+            public void call(Subscriber<? super String> observer) {
+                try {
+                    if (!observer.isUnsubscribed()) {
+                        // a real example would do work like a network call here
+                        observer.onNext("Hello");
+                        observer.onNext(name + "!");
+                        observer.onCompleted();
+                    }
+                } catch (Exception e) {
+                    observer.onError(e);
+                }
+            }
+         } );
+    }
+```
+closed: I'm not sure exactly why this started happening on a recent build, as I don't believe memory characteristics are changing very much.
+
+In any case, I was able to run all unit tests on my local with -Xmx200m, so I'm going to give that setting to Travis and see if that improves things
+closed: Hopefully fixes #726 
+closed: Fixes #574.  Code change by @ramkarna
+closed: 
+
+e: ******************************************
+mattrjacobs has the most open issues(5)
+mattrjacobs has the most closed issues(9)
+
+f: ******************************************
+Open pull requests:
+******************************************
+Id: 26061593, title: Metrics expire after inactivity in milliseconds
+
+g: ******************************************
+Top contributors
+******************************************
+benjchristensen has contributed 519
+mattrjacobs has contributed 244
+quidryan has contributed 52
+dmgcodevil has contributed 22
+daveray has contributed 11
+
+h: ******************************************
+Diff of last commit to master branch:
+******************************************
+diff --git a/hystrix-dashboard/src/main/webapp/components/hystrixCommand/templates/hystrixCircuit.html b/hystrix-dashboard/src/main/webapp/components/hystrixCommand/templates/hystrixCircuit.html
+index e50a352..58b8aaa 100644
+--- a/hystrix-dashboard/src/main/webapp/components/hystrixCommand/templates/hystrixCircuit.html
++++ b/hystrix-dashboard/src/main/webapp/components/hystrixCommand/templates/hystrixCircuit.html
+@@ -9,6 +9,9 @@
+ 				<a href="javascript://" title="Timed-out Request Count" class="line tooltip timeout"><%= addCommas(rollingCountTimeout) %></a>
+ 				<a href="javascript://" title="Threadpool Rejected Request Count" class="line tooltip rejected"><%= addCommas(rollingCountThreadPoolRejected) %></a>
+ 			<% } %>
++			<% if(propertyValue_executionIsolationStrategy == 'SEMAPHORE') { %>
++				<a href="javascript://" title="Semaphore Rejected Request Count" class="line tooltip rejected"><%= addCommas(rollingCountSemaphoreRejected) %></a>
++			<% } %>
+ 			<a href="javascript://" title="Failure Request Count" class="line tooltip failure"><%= addCommas(rollingCountFailure) %></a> 
+ 		</div>
+ 		<div class="cell borderRight">
+
+i: ******************************************
+Last commit was in the master branch. Diff is same as above.
+
+Bonus ******************************************
+Monthly histogram
+******************************************
+JAN ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+FEB ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+MAR +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+APR +++++++++++++++++++++++++++++++++++++++
+MAY ++++++++++++++++++++++++++++
+JUN ++++++
+JUL +++++++++++++++++++++++++++++++++++
+AUG ++++++++++++++++++++++++++++++++++++++++++++
+SEP ++++++++++++++++++++++++++++++++++++++++
+OCT +++++++++++++
+NOV ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+DEC ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Bouns ******************************************
+Weekly histogram
+******************************************
+SUN +++++++++++++++++++++++++++++++++++++++
+MON ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+TUE ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+WED +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+THU +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+FRI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+SAT +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
